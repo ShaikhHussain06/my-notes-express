@@ -37,7 +37,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/", async (req,res) => {
-    let notes = await getNotes();
+    let notes = [];
+    try {
+        notes = await getNotes();
+    } catch (error) {
+        res.locals.error = 'Error getting notes.'+error;
+    }
+    
     res.render('index', { notes });
     
 });
@@ -52,16 +58,26 @@ app.post("/save", async (req,res) => {
         req.flash('error', 'Content cannot be empty.');
         return res.redirect('/new');
     }
-    await saveNote(content);
-    req.flash('success', 'Added successfully.');
+    try {
+        await saveNote(content);
+        req.flash('success', 'Added successfully.');
+    } catch (error) {
+        req.flash('error', 'Error saving notes.');
+    }
+    
     return res.redirect('/');
 });
 
 app.get('/delete/:id', async (req,res) => {
     const { id } = req.params;
 
-    await deleteNote(id);
-    req.flash('success', 'Note deleted successfully.');
+    try {
+        await deleteNote(id);
+        req.flash('success', 'Note deleted successfully.');
+    } catch (error) {
+        req.flash('error', 'Note delete failed.');
+    }
+    
     return res.redirect('/');
 });
 
